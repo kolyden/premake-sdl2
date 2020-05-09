@@ -10,7 +10,7 @@ workspace "sdl2"
 project "sdl2"
     kind "StaticLib"
     language "C"
-    defines "HAVE_LIBC"
+    defines "HAVE_LIBC" -- StaticLib
     includedirs { 
         path.join(SDL2_DIR, "include"),
     }
@@ -30,8 +30,7 @@ project "sdl2"
         path.join(SDL2_DIR, "src/audio/*.h"),
         path.join(SDL2_DIR, "src/audio/dummy/**"),
         -- EVENTS --
-        path.join(SDL2_DIR, "src/events/SDL_*"),
-        path.join(SDL2_DIR, "src/events/*_cursor.h"),
+        path.join(SDL2_DIR, "src/events/*"),
         -- FILE --
         path.join(SDL2_DIR, "src/file/*.c"),
         -- HAPTIC --
@@ -111,7 +110,6 @@ project "sdl2"
             "VC_EXTRALEAN",
             "_CRT_SECURE_NO_WARNINGS",
         }
-
         links { "user32", "gdi32", "winmm", "imm32", "ole32", "oleaut32", "version", "uuid" }
 
     filter "system:linux"
@@ -125,15 +123,35 @@ project "sdl2"
         }
 
     filter "system:macosx"
+        includedirs { path.join(SDL2_DIR, "src/video/khronos") }
+        xcodebuildsettings {
+            ["ALWAYS_SEARCH_USER_PATHS"] = "YES",
+        }
         files {
+            path.join(SDL2_DIR, "src/audio/coreaudio/**"),
+            path.join(SDL2_DIR, "src/audio/disk/**"),
             path.join(SDL2_DIR, "src/events/scancodes_darwin.h"),
             path.join(SDL2_DIR, "src/file/cocoa/**"),
             path.join(SDL2_DIR, "src/filesystem/cocoa/**"),
             path.join(SDL2_DIR, "src/haptic/darwin/**"),
+            path.join(SDL2_DIR, "src/hidapi/*.c"),
+            path.join(SDL2_DIR, "src/hidapi/hidapi/*.h"),
+            path.join(SDL2_DIR, "src/hidapi/mac/*.c"),
+            path.join(SDL2_DIR, "src/hidapi/ios/*.c"),
             path.join(SDL2_DIR, "src/joystick/darwin/**"),
+            path.join(SDL2_DIR, "src/loadso/dlopen/**"),
             path.join(SDL2_DIR, "src/locale/macosx/**"),
             path.join(SDL2_DIR, "src/power/macosx/**"),
+            path.join(SDL2_DIR, "src/render/opengles/**"),
+            path.join(SDL2_DIR, "src/render/metal/**"),
+            path.join(SDL2_DIR, "src/sensor/coremotion/**"),
+            path.join(SDL2_DIR, "src/thread/pthread/**"),
+            path.join(SDL2_DIR, "src/timer/unix/**"),
             path.join(SDL2_DIR, "src/video/cocoa/**"),
+            path.join(SDL2_DIR, "src/video/khronos/**"),
+            path.join(SDL2_DIR, "src/video/offscreen/**"),
+            path.join(SDL2_DIR, "src/video/uikit/**"),
+            path.join(SDL2_DIR, "src/video/x11/**"),
         }
         defines {
             --"SDL_SHARED",
@@ -147,16 +165,6 @@ project "sdl2"
             "SDL_FILESYSTEM_COCOA",
         }
         buildoptions {"-fPIC"}
-        links {
-            "ForceFeedback.framework",
-            "CoreVideo.framework",
-            "Cocoa.framework",
-            "IOKit.framework",
-            "Carbon.framework",
-            "CoreAudio.framework",
-            "AudioToolbox.framework",
-            "dl"
-        }
 
     filter "system:android"
         files {
@@ -171,13 +179,12 @@ project "sdl2"
             path.join(SDL2_DIR, "src/power/android/**"),
             path.join(SDL2_DIR, "src/sensor/android/**"),
             path.join(SDL2_DIR, "src/video/android/**"),
-
             path.join(SDL2_DIR, "src/loadso/dlopen/**"),
             path.join(SDL2_DIR, "src/thread/pthread/**"),
             path.join(SDL2_DIR, "src/timer/unix/**"),
             path.join(SDL2_DIR, "src/render/opengles/**"),
         }
-        
+
     filter "system:ios"
         files
         {
@@ -194,14 +201,41 @@ project "sdl2_test_common"
 
 project "sdl2_main"
     kind "StaticLib"
-    files { SDL2_DIR.."src/main/windows/*.c" }
     includedirs { SDL2_INCLUDE }
+
+    filter "system:windows"
+        files { SDL2_DIR.."src/main/windows/*.c" }
+
+    filter "system:macosx"
+        files { SDL2_DIR.."src/main/dummy/*.c" }
 
 SDL2_TEST_DIR = path.join(SDL2_DIR, "test")
 
 project "Test"
     kind "WindowedApp"
-    links { "sdl2", "sdl2_main", "sdl2_test_common" }
-    files { path.join(SDL2_DIR,"test/testsprite2.c") }
+    links { "sdl2", "sdl2_test_common" }
+    filter "system:windows"
+        links { "sdl2_main" }
+    files { 
+        path.join(SDL2_DIR,"test/testsprite2.c"),
+    }
+    xcodebuildresources {
+        path.join(SDL2_DIR, "test/*.bmp"),
+    }
     includedirs { SDL2_INCLUDE }
     debugdir (SDL2_TEST_DIR)
+
+    filter "system:macosx"
+        links {
+            "AudioToolbox.framework",
+            "AudioUnit.framework",
+            "Carbon.framework",
+            "Cocoa.framework",
+            "CoreAudio.framework",
+            "CoreFoundation.framework",
+            "CoreVideo.framework",
+            "ForceFeedback.framework",
+            "IOKit.framework",
+            "Metal.framework",
+            "dl" -- ?
+        }
