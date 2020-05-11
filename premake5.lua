@@ -1,16 +1,25 @@
 SDL2_DIR     = "sdl2"
 SDL2_INCLUDE = SDL2_DIR.."/include"
 
+local solution_name = _ACTION
+
+if _ACTION == "ios" then
+    solution_name = _ACTION
+    _ACTION = "xcode4"
+    system "ios"
+end
+
 workspace "sdl2"
     targetdir "bin/%{_ACTION}-%{cfg.platform}-%{cfg.buildcfg}/%{prj.name}"
     objdir "temp/%{_ACTION}-%{cfg.platform}-%{cfg.buildcfg}/%{prj.name}"
-    location (path.join("project", _ACTION))
+    location (path.join("project", solution_name))
     configurations { "Release", "Debug" }
 
 project "sdl2"
     kind "StaticLib"
     language "C"
     defines "HAVE_LIBC" -- StaticLib
+    --defines "SDL_SHARED" -- SharedLib
     includedirs { 
         path.join(SDL2_DIR, "include"),
     }
@@ -106,9 +115,6 @@ project "sdl2"
             "SDL_DISABLE_WINDOWS_IME",
             "WIN32",
             "__WIN32__",
-            --"SDL_SHARED",
-            "VC_EXTRALEAN",
-            "_CRT_SECURE_NO_WARNINGS",
         }
         links { "user32", "gdi32", "winmm", "imm32", "ole32", "oleaut32", "version", "uuid" }
 
@@ -154,7 +160,6 @@ project "sdl2"
             path.join(SDL2_DIR, "src/video/x11/**"),
         }
         defines {
-            --"SDL_SHARED",
             "SDL_POWER_MACOSX",
             "SDL_VIDEO_DRIVER_COCOA",
             "SDL_VIDEO_OPENGL_GLX",
@@ -192,7 +197,10 @@ project "sdl2"
         }
 
     filter "action:vs*"
-        defines "_CRT_SECURE_NO_WARNINGS"
+        defines {
+            "_CRT_SECURE_NO_WARNINGS",
+            "VC_EXTRALEAN",
+        }
 
 project "sdl2_test_common"
     kind "StaticLib"
